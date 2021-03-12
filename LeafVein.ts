@@ -1,6 +1,6 @@
-import vec2 from "./tsm/vec2";
-import * as P from "./parameters";
-import * as utils from "./utils";
+import vec2 from "./utils/tsm/vec2";
+import * as P from "./utils/parameters";
+import * as utils from "./utils/utils";
 import { MarginVertex } from "./LeafMargin";
 
 export default class LeafVein {
@@ -49,19 +49,11 @@ export default class LeafVein {
   applyGrowth() {
     // Growth of parent veins causes whole vein to move
     this.origin.add(this.growthVector);
-    this.tip.add(this.growthVector);
-    // Growth of this vein causes tip to move
-    const growthAmount =
-      utils.growthIntegralAtDist(this.distToBase + this.length()) -
-      utils.growthIntegralAtDist(this.distToBase);
-
-    const tipGrowthVector = this.direction.copy().multiply(growthAmount);
-    this.tip.add(tipGrowthVector);
   }
 
   // Get growth of margin point, as projected on to this vein
   getProjectedGrowthVector(marginPos: vec2) {
-    const posVector = marginPos.copy().subtract(this.origin);
+    const posVector = vec2.difference(marginPos, this.origin);
     const projectedLength = vec2.dot(posVector, this.direction);
     const growthAmount =
       utils.growthIntegralAtDist(this.distToBase + projectedLength) -
@@ -74,6 +66,9 @@ export default class LeafVein {
 
     return projectedGrowthVector;
   }
+
+  // Returns growth vector at a point on the vein
+  // getGrowthVector(veinPos: vec2) {}
 
   length() {
     return vec2.distance(this.origin, this.tip);

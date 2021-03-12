@@ -1,4 +1,6 @@
 export const NUM_INIT_SAMPLES: number = 5;
+export const MARGIN_SUBDIV_THRESHOLD = 4;
+
 export const GROW_RATE: number = 0.1;
 // Nutrient transport resistance parameters B > V > 0
 // Used to calculate branching angle

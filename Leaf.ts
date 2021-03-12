@@ -1,5 +1,5 @@
-import vec2 from "./tsm/vec2";
-import * as P from "./parameters";
+import vec2 from "./utils/tsm/vec2";
+import * as P from "./utils/parameters";
 import { VascularSystem } from "./VascularSystem";
 import { LeafLamina } from "./LeafLamina";
 import { LeafMargin } from "./LeafMargin";
@@ -20,9 +20,15 @@ export class Leaf {
 
   step() {
     console.log("time: " + this.time);
+    // Growth is led by vein elongation
     this.veins.calcGrowthVectors();
+    // Margin points grows according to their projections on the veins
     this.margin.grow();
+    // Vein are displaced in response to parent veins' growth
     this.veins.applyGrowth();
+    // Margin is subdivided if needed
+    this.margin.subdivide();
+
     this.time++;
   }
 }
