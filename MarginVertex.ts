@@ -26,13 +26,15 @@ export default class MarginVertex {
   }
 
   grow() {
-    const growthVector = this.tipVertex.vein.getProjectedGrowthVector(
-      this.position
-    );
+    const tipVertex = this.isTip ? this : this.tipVertex;
+    const growthVector = tipVertex.vein.getProjectedGrowthVector(this.position);
     let growthMultiplier = 1;
-    if (this.morphogens.length > 0) {
+    // Prev vertex morphogens affect the growth
+    if (this.prevVertex && this.prevVertex.morphogens.length > 0) {
       growthMultiplier = Math.min(
-        ...this.morphogens.map((morphogen) => morphogen.growthMultiplier)
+        ...this.prevVertex.morphogens.map(
+          (morphogen) => morphogen.growthMultiplier
+        )
       );
     }
     this.position.add(growthVector.multiply(growthMultiplier));

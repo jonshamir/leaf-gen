@@ -10,4 +10,4 @@ export const V: number = 1; // Vein resistance
 export const GROWTH_DIST_FALLOFF = 5;
 export const GROWTH_DIST_END = 6;
 
-export const TIP_GENERATION_LENGTH = 6;
+export const TIP_GENERATION_LENGTH = 10;

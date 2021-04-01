@@ -5,7 +5,6 @@ import MarginVertex from "./MarginVertex";
 import Morphogen from "./Morphogen";
 
 export class LeafMargin {
-  vertices: Array<MarginVertex> = []; // TODO delete
   rootRight: MarginVertex; // Linked list
   rootLeft: MarginVertex; // Linked list
 
@@ -19,67 +18,98 @@ export class LeafMargin {
     this.tipVertex.isTip = true;
 
     //Generates left and right margin
-    let prevVertex = null;
-    for (let i = 0; i < 2 * P.NUM_INIT_VERTICES - 1; i++) {
-      let vertex = new MarginVertex();
+    let vertexRight, vertexLeft;
+    let prevVertexRight = null;
+    let prevVertexLeft = null;
+    for (let i = 0; i < P.NUM_INIT_VERTICES - 1; i++) {
+      vertexRight = new MarginVertex();
+      vertexLeft = new MarginVertex();
+      vertexRight.position = new vec2([-1, i]);
+      vertexLeft.position = new vec2([1, i]);
 
-      if (i < P.NUM_INIT_VERTICES - 1) {
-        vertex.position = new vec2([1, i]);
-      } else if (i == P.NUM_INIT_VERTICES - 1) {
-        vertex = this.tipVertex;
+      vertexRight.tipVertex = this.tipVertex;
+      vertexLeft.tipVertex = this.tipVertex;
+      vertexRight.prevVertex = prevVertexRight;
+      vertexLeft.prevVertex = prevVertexLeft;
+      if (i == 0) {
+        this.rootRight = vertexRight;
+        this.rootLeft = vertexLeft;
       } else {
-        vertex.position = new vec2([-1, 2 * P.NUM_INIT_VERTICES - i - 2]);
+        prevVertexRight.nextVertex = vertexRight;
+        prevVertexLeft.nextVertex = vertexLeft;
       }
-      vertex.tipVertex = this.tipVertex;
-      vertex.prevVertex = prevVertex;
-      if (prevVertex) prevVertex.nextVertex = vertex;
-      prevVertex = vertex;
 
-      this.vertices.push(vertex);
+      prevVertexRight = vertexRight;
+      prevVertexLeft = vertexLeft;
     }
 
+    vertexRight.nextVertex = this.tipVertex;
+    vertexLeft.nextVertex = this.tipVertex;
+
+    console.log(this.rootRight);
+
     // Initialize morphogens
+
     const petioleMorphogen = new Morphogen("petioleMorphogen");
-    petioleMorphogen.addSegment(this.vertices[0], this.vertices[1]);
-    petioleMorphogen.addSegment(
-      this.vertices[2 * P.NUM_INIT_VERTICES - 3],
-      this.vertices[2 * P.NUM_INIT_VERTICES - 2]
-    );
+    petioleMorphogen.addSegment(this.rootRight, this.rootRight.nextVertex);
+    petioleMorphogen.addSegment(this.rootLeft, this.rootLeft.nextVertex);
     petioleMorphogen.growthMultiplier = 0;
 
     const tipGrowthMorphogen = new Morphogen("tipGrowthMorphogen");
-    tipGrowthMorphogen.addSegment(this.vertices[0], this.vertices[3]);
-    tipGrowthMorphogen.addSegment(
-      this.vertices[2 * P.NUM_INIT_VERTICES - 5],
-      this.vertices[2 * P.NUM_INIT_VERTICES - 2]
-    );
+    tipGrowthMorphogen.addSegment(this.rootRight, vertexRight);
+    tipGrowthMorphogen.addSegment(this.rootLeft, vertexLeft);
+
     tipGrowthMorphogen.tipGenerationLength = P.TIP_GENERATION_LENGTH;
     this.morphogens.push(tipGrowthMorphogen);
     this.morphogens.push(petioleMorphogen);
   }
 
+  getRightVertices(includeTip = true) {
+    return this.getVertexArray(this.rootRight, includeTip);
+  }
+
+  getLeftVertices(includeTip = true) {
+    return this.getVertexArray(this.rootLeft, includeTip);
+  }
+
+  getVertexArray(rootVertex: MarginVertex, includeTip: boolean) {
+    let currVertex = rootVertex;
+    let vertexArray = [];
+    while (currVertex != this.tipVertex) {
+      vertexArray.push(currVertex);
+      currVertex = currVertex.nextVertex;
+    }
+    if (includeTip) vertexArray.push(this.tipVertex);
+    return vertexArray;
+  }
+
   getAllVertices() {
     let currVertex = this.rootRight;
     let vertexArray = [];
-    let rightMarginComplete = false;
     while (currVertex != this.tipVertex) {
       vertexArray.push(currVertex);
       currVertex = currVertex.nextVertex;
     }
   }
 
+  forEachVertex(callback: any) {
+    this.getRightVertices().forEach(callback);
+    this.getLeftVertices(false).forEach(callback);
+  }
+
+  mapVertices(callback: any) {
+    const rightArray = this.getRightVertices().map(callback);
+    const leftArray = this.getLeftVertices(false).map(callback);
+    return rightArray.concat(leftArray);
+  }
+
   grow() {
-    this.vertices.forEach((vertex) => {
+    this.forEachVertex((vertex) => {
       vertex.grow();
     });
   }
 
-  calcNormals() {
-    this.vertices.forEach((vertex, i) => {
-      const prevVertex = this.vertices[i - 1];
-      const nextVertex = this.vertices[i + 1];
-    });
-  }
+  calcNormals() {}
 
   generateTipVertices() {
     let newTipVertices = [];
@@ -104,11 +134,9 @@ export class LeafMargin {
             currVertex = currVertex.nextVertex;
           }
           if (segmentLength >= tipGenerationLength) {
-            const insertIndex = this.vertices.indexOf(midVertex) + 1;
             // Add new tip vertex after midVertex
             const newTipVertex = midVertex.subdivide();
-            // Add new vertex to this.vertices array
-            this.vertices.splice(insertIndex, 0, newTipVertex);
+            newTipVertex.isTip = true;
             // Split segment
             segments.splice(segmentIndex, 1); // Remove old segment
             i--;
@@ -117,7 +145,6 @@ export class LeafMargin {
             newTipVertices.push(newTipVertex);
 
             // update tip vertex pointers
-            newTipVertex.tipVertex = newTipVertex;
             // midVertex.tipVertex = newTipVertex;
             // newTipVertex.nextVertex.tipVertex = newTipVertex;
           }
@@ -129,25 +156,23 @@ export class LeafMargin {
   }
 
   vetexArrayToString() {
-    return this.vertices.map(
+    return this.mapVertices(
       ({ position }) => position.x.toFixed(2) + "," + position.y.toFixed(2)
     );
   }
 
   subdivide() {
-    const newVertices = this.vertices.reduce((newVertices, currVertex, i) => {
-      newVertices.push(currVertex);
+    this.subdivideSide(this.rootRight);
+    this.subdivideSide(this.rootLeft);
+  }
 
-      const { nextVertex } = currVertex;
-      if (nextVertex != null) {
-        if (currVertex.length() > P.MARGIN_SUBDIV_THRESHOLD) {
-          const newVertex = currVertex.subdivide();
-          newVertices.push(newVertex);
-        }
-      }
-      return newVertices;
-    }, []);
+  subdivideSide(rootVertex: MarginVertex) {
+    let currVertex = rootVertex;
+    while (currVertex != this.tipVertex) {
+      if (currVertex.length() > P.MARGIN_SUBDIV_THRESHOLD)
+        currVertex.subdivide();
 
-    this.vertices = newVertices;
+      currVertex = currVertex.nextVertex;
+    }
   }
 }

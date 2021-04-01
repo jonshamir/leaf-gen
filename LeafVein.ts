@@ -1,7 +1,7 @@
 import vec2 from "./utils/tsm/vec2";
 import * as P from "./utils/parameters";
 import * as utils from "./utils/utils";
-import { MarginVertex } from "./LeafMargin";
+import MarginVertex from "./MarginVertex";
 
 export default class LeafVein {
   origin: vec2; // Origin position

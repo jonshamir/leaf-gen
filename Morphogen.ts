@@ -36,7 +36,6 @@ export default class Morphogen {
       currVertex.morphogens.push(this);
       currVertex = currVertex.nextVertex;
     }
-    currVertex.morphogens.push(this);
   }
 
   getSegmentsVertices() {
