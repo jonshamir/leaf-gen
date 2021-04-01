@@ -21,6 +21,7 @@ export default class MarginVertex {
   copy() {
     const newVertex = new MarginVertex();
     newVertex.tipVertex = this.tipVertex;
+    newVertex.morphogens = this.morphogens;
     return newVertex;
   }
 
@@ -35,5 +36,23 @@ export default class MarginVertex {
       );
     }
     this.position.add(growthVector.multiply(growthMultiplier));
+  }
+
+  length() {
+    if (this.nextVertex != null)
+      return vec2.distance(this.position, this.nextVertex.position);
+    return 0;
+  }
+
+  // Duplicates this vertex and appends it midway to nextVertex
+  subdivide() {
+    const newVertex = this.copy();
+    newVertex.position = vec2
+      .sum(this.position, this.nextVertex.position)
+      .multiply(0.5);
+    newVertex.prevVertex = this;
+    newVertex.nextVertex = this.nextVertex;
+    this.nextVertex = newVertex;
+    return newVertex;
   }
 }

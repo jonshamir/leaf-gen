@@ -9,6 +9,7 @@ export default class Morphogen {
 
   // Parameters
   growthMultiplier: number = 1;
+  tipGenerationLength: number = -1; // Length of segment that will induce a new tip to form
 
   // =================
   mindist: number;
@@ -38,7 +39,7 @@ export default class Morphogen {
     currVertex.morphogens.push(this);
   }
 
-  getSegmentVertices() {
+  getSegmentsVertices() {
     this.segments.map((segment, i) => {
       const startVertex = segment[0];
       const endVertex = segment[1];

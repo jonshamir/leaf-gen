@@ -26,6 +26,10 @@ export class Leaf {
     this.margin.grow();
     // Vein are displaced in response to parent veins' growth
     this.veins.applyGrowth();
+    // Convergance points (vein tips) might be created
+    const newTipVertices = this.margin.generateTipVertices();
+    // New veins are added connecting the new tips
+    newTipVertices.forEach((tipVertex) => this.veins.addVein(tipVertex));
     // Margin is subdivided if needed
     this.margin.subdivide();
 

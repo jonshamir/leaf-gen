@@ -1,8 +1,7 @@
 import vec2 from "./utils/tsm/vec2";
 import * as P from "./utils/parameters";
-import * as utils from "./utils";
 import LeafVein from "./LeafVein";
-import { MarginVertex } from "./LeafMargin";
+import MarginVertex from "./MarginVertex";
 
 export class VascularSystem {
   veins: Array<LeafVein> = [];
