@@ -13,46 +13,39 @@ export class LeafMargin {
 
   constructor() {
     // Generate tip vertex
-    this.tipVertex = new MarginVertex();
-    this.tipVertex.position = new vec2([0, P.NUM_INIT_VERTICES - 1]);
+    this.tipVertex = new MarginVertex(new vec2([0, P.NUM_INIT_VERTICES - 1]));
     this.tipVertex.isTip = true;
 
     //Generates left and right margin
     let vertexRight, vertexLeft;
-    let prevVertexRight = null;
-    let prevVertexLeft = null;
+    let prevRight = null;
+    let prevLeft = null;
     for (let i = 0; i < P.NUM_INIT_VERTICES - 1; i++) {
-      vertexRight = new MarginVertex();
-      vertexLeft = new MarginVertex();
-      vertexRight.position = new vec2([-1, i]);
-      vertexLeft.position = new vec2([1, i]);
+      vertexRight = new MarginVertex(new vec2([-1, i]), this.tipVertex);
+      vertexLeft = new MarginVertex(new vec2([1, i]), this.tipVertex);
 
-      vertexRight.tipVertex = this.tipVertex;
-      vertexLeft.tipVertex = this.tipVertex;
-      vertexRight.prevVertex = prevVertexRight;
-      vertexLeft.prevVertex = prevVertexLeft;
+      vertexRight.prev = prevRight;
+      vertexLeft.prev = prevLeft;
       if (i == 0) {
         this.rootRight = vertexRight;
         this.rootLeft = vertexLeft;
       } else {
-        prevVertexRight.nextVertex = vertexRight;
-        prevVertexLeft.nextVertex = vertexLeft;
+        prevRight.next = vertexRight;
+        prevLeft.next = vertexLeft;
       }
 
-      prevVertexRight = vertexRight;
-      prevVertexLeft = vertexLeft;
+      prevRight = vertexRight;
+      prevLeft = vertexLeft;
     }
 
-    vertexRight.nextVertex = this.tipVertex;
-    vertexLeft.nextVertex = this.tipVertex;
-
-    console.log(this.rootRight);
+    vertexRight.next = this.tipVertex;
+    vertexLeft.next = this.tipVertex;
 
     // Initialize morphogens
 
     const petioleMorphogen = new Morphogen("petioleMorphogen");
-    petioleMorphogen.addSegment(this.rootRight, this.rootRight.nextVertex);
-    petioleMorphogen.addSegment(this.rootLeft, this.rootLeft.nextVertex);
+    petioleMorphogen.addSegment(this.rootRight, this.rootRight.next);
+    petioleMorphogen.addSegment(this.rootLeft, this.rootLeft.next);
     petioleMorphogen.growthMultiplier = 0;
 
     const tipGrowthMorphogen = new Morphogen("tipGrowthMorphogen");
@@ -77,7 +70,7 @@ export class LeafMargin {
     let vertexArray = [];
     while (currVertex != this.tipVertex) {
       vertexArray.push(currVertex);
-      currVertex = currVertex.nextVertex;
+      currVertex = currVertex.next;
     }
     if (includeTip) vertexArray.push(this.tipVertex);
     return vertexArray;
@@ -88,7 +81,7 @@ export class LeafMargin {
     let vertexArray = [];
     while (currVertex != this.tipVertex) {
       vertexArray.push(currVertex);
-      currVertex = currVertex.nextVertex;
+      currVertex = currVertex.next;
     }
   }
 
@@ -118,37 +111,45 @@ export class LeafMargin {
       const morphogen = this.morphogens[i];
       const { tipGenerationLength, segments } = morphogen;
       if (tipGenerationLength > 0) {
-        // Iterate morphogens segments, generate new tips if needed
+        // Iterate morphogen segments, generate new tips if needed
+        let updatedSegments = [];
         segments.forEach((segment, segmentIndex) => {
-          const startVertex = segment[0];
-          const endVertex = segment[1];
+          const [startVertex, endVertex] = segment;
 
           let segmentLength = 0;
           let currVertex = startVertex; // startVertex
-          let midVertex: MarginVertex;
+          let midVertex: MarginVertex = null;
 
+          // calculate segment length and find midway vertex
           while (currVertex != endVertex) {
-            segmentLength += currVertex.length();
-            if (!midVertex && segmentLength >= tipGenerationLength / 2)
+            if (midVertex == null && segmentLength >= tipGenerationLength / 2)
               midVertex = currVertex;
-            currVertex = currVertex.nextVertex;
+            segmentLength += currVertex.length();
+            currVertex = currVertex.next;
           }
           if (segmentLength >= tipGenerationLength) {
             // Add new tip vertex after midVertex
             const newTipVertex = midVertex.subdivide();
             newTipVertex.isTip = true;
             // Split segment
-            segments.splice(segmentIndex, 1); // Remove old segment
-            i--;
-            morphogen.addSegment(startVertex, midVertex);
-            morphogen.addSegment(newTipVertex.nextVertex, endVertex);
+            const splitSegments = morphogen.splitSegment(
+              startVertex,
+              endVertex,
+              newTipVertex,
+              0
+            );
+            updatedSegments.push(...splitSegments);
             newTipVertices.push(newTipVertex);
 
             // update tip vertex pointers
-            // midVertex.tipVertex = newTipVertex;
-            // newTipVertex.nextVertex.tipVertex = newTipVertex;
+            midVertex.tipVertex = newTipVertex;
+            newTipVertex.next.tipVertex = newTipVertex;
+          } else {
+            updatedSegments.push(segment);
           }
         });
+
+        morphogen.segments = updatedSegments;
       }
     }
 
@@ -172,7 +173,7 @@ export class LeafMargin {
       if (currVertex.length() > P.MARGIN_SUBDIV_THRESHOLD)
         currVertex.subdivide();
 
-      currVertex = currVertex.nextVertex;
+      currVertex = currVertex.next;
     }
   }
 }

@@ -1,0 +1,5 @@
+TODO
+=======
+- New veins - calculate attachment point
+- New tips - associate sample points based on distance parameter
+- Implement geometric fairing - margin growth

@@ -34,8 +34,37 @@ export default class Morphogen {
     let currVertex = startVertex;
     while (currVertex != endVertex) {
       currVertex.morphogens.push(this);
-      currVertex = currVertex.nextVertex;
+      currVertex = currVertex.next;
     }
+  }
+
+  // Splits the given segment at midVertex, returns new segments
+  // Does not update segment array!
+  // TODO make radius exact
+  splitSegment(
+    startVertex: MarginVertex,
+    endVertex: MarginVertex,
+    newVertex: MarginVertex,
+    radius: number
+  ) {
+    let currVertex = newVertex;
+    let counter = 0;
+    while (currVertex.next && currVertex != endVertex && counter <= radius) {
+      currVertex.removeMorphogen(this);
+      currVertex = currVertex.next;
+      counter++;
+    }
+    const newSegment1 = [currVertex, endVertex];
+    currVertex = newVertex;
+    counter = 0;
+    while (currVertex.prev && currVertex != startVertex && counter <= radius) {
+      currVertex.removeMorphogen(this);
+      currVertex = currVertex.prev;
+      counter++;
+    }
+    const newSegment2 = [startVertex, currVertex];
+
+    return [newSegment1, newSegment2];
   }
 
   getSegmentsVertices() {
@@ -46,7 +75,7 @@ export default class Morphogen {
       let currVertex = startVertex;
       while (currVertex != endVertex) {
         segmentVertices.push(currVertex);
-        currVertex = currVertex.nextVertex;
+        currVertex = currVertex.next;
       }
     });
   }

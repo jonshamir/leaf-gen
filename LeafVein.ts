@@ -4,6 +4,9 @@ import * as utils from "./utils/utils";
 import MarginVertex from "./MarginVertex";
 
 export default class LeafVein {
+  static counter: number = 0;
+
+  id: number;
   origin: vec2; // Origin position
   tip: vec2; // Tip position
   tipVertex: MarginVertex;
@@ -14,7 +17,8 @@ export default class LeafVein {
   children: Array<LeafVein> = [];
   parent: LeafVein;
 
-  constructor(origin: vec2, tipVertex: MarginVertex, parent: LeafVein) {
+  constructor(origin: vec2, tipVertex: MarginVertex, parent: LeafVein = null) {
+    this.id = LeafVein.counter++;
     this.origin = origin;
     this.tip = tipVertex.position;
     this.tipVertex = tipVertex;
@@ -49,6 +53,7 @@ export default class LeafVein {
   applyGrowth() {
     // Growth of parent veins causes whole vein to move
     this.origin.add(this.growthVector);
+    this.children.forEach((childVein) => childVein.applyGrowth());
   }
 
   // Get growth of margin point, as projected on to this vein
@@ -76,5 +81,15 @@ export default class LeafVein {
 
   projectOnVein(pos: vec2) {
     return this.tip;
+  }
+
+  getAllChildren() {
+    let allChildren = [];
+
+    this.children.forEach((child) => {
+      allChildren = allChildren.concat(child.getAllChildren());
+    });
+
+    return allChildren.concat([this]);
   }
 }
