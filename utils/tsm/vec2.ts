@@ -113,7 +113,7 @@ export default class vec2 {
     let vector = value as vec2;
     let scalar = value as number;
 
-    if (vector.x) {
+    if (vector.x != undefined) {
       this.x *= vector.x;
       this.y *= vector.y;
     } else {
@@ -166,6 +166,16 @@ export default class vec2 {
     dest.y *= length;
 
     return dest;
+  }
+
+  rotate90deg(clockwise: boolean): vec2 {
+    const x = this.values[0];
+    const y = this.values[1];
+    this.values[0] = -y;
+    this.values[1] = x;
+    if (clockwise) this.multiply(-1);
+
+    return this;
   }
 
   multiplyMat2(matrix: mat2, dest?: vec2): vec2 {
@@ -259,6 +269,10 @@ export default class vec2 {
     dest.y = y + time * (y2 - y);
 
     return dest;
+  }
+
+  static average(v1: vec2, v2: vec2): vec2 {
+    return vec2.sum(v1, v2).multiply(0.5);
   }
 
   static sum(vector: vec2, vector2: vec2, dest?: vec2): vec2 {

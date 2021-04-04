@@ -22,6 +22,8 @@ export class Leaf {
     console.log("time: " + this.time);
     // Growth is led by vein elongation
     this.veins.calcGrowthVectors();
+    // Normal directions, streching and curvature also affect margin growth
+    this.margin.calcFairing();
     // Margin points grows according to their projections on the veins
     this.margin.grow();
     // Vein are displaced in response to parent veins' growth

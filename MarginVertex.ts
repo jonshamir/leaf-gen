@@ -9,7 +9,7 @@ export default class MarginVertex {
   static counter: number = 0;
 
   id: number;
-  position: vec2;
+  pos: vec2;
   normal: vec2;
   isTip: boolean = false;
   vein: LeafVein;
@@ -19,9 +19,9 @@ export default class MarginVertex {
   next: MarginVertex | null; // Pointer to the previous vertex in the margin
   tipVertex: MarginVertex; // Pointer to the tip vertex asocciated with this vertex
 
-  constructor(position: vec2, tipVertex: MarginVertex = null) {
+  constructor(pos: vec2, tipVertex: MarginVertex = null) {
     this.id = MarginVertex.counter++;
-    this.position = position;
+    this.pos = pos;
     this.tipVertex = tipVertex;
   }
 
@@ -36,30 +36,75 @@ export default class MarginVertex {
   }
 
   grow() {
-    const growthVector = this.getGrowthVector();
+    const veinGrowthVector = this.getVeinGrowthVector();
+    const fairingVector = this.getFairingVector();
+
+    const totalGrowthVector = vec2.sum(veinGrowthVector, fairingVector);
+
     const growthMultiplier = this.getGrowthMultiplier();
-    this.position.add(growthVector.multiply(growthMultiplier));
+
+    this.pos.add(totalGrowthVector.multiply(growthMultiplier));
   }
 
-  getGrowthMultiplier(): number {
-    let growthMultiplier = 1;
+  getGrowthMultiplier(): vec2 {
+    let growthMultiplier = vec2.one;
     // Prev vertex morphogens affect the growth
-    if (this.prev && this.prev.morphogens.length > 0) {
-      growthMultiplier = Math.min(
-        ...this.prev.morphogens.map((morphogen) => morphogen.growthMultiplier)
-      );
-    }
+    let morphogens = this.morphogens;
+    if (this.prev) morphogens = this.prev.morphogens;
+    morphogens.forEach((m) => {
+      if (m.growthMultiplier) growthMultiplier = m.growthMultiplier;
+    });
     return growthMultiplier;
   }
 
-  getGrowthVector(): vec2 {
+  getFairingVector(): vec2 {
+    let fairingVector = new vec2([0, 0]);
+    if (this.prev && !this.isTip) {
+      // Normal
+      /// Growth in normal direction is proportional to average length of edges
+      let normalMultiplier = vec2.difference(this.next.pos, this.pos).length();
+      normalMultiplier += vec2.difference(this.pos, this.prev.pos).length();
+      normalMultiplier /= 2;
+      normalMultiplier *= 0.8;
+
+      const normalGrowthVector = this.normal.multiply(normalMultiplier);
+
+      // Streching
+      // Compute direction minimizing stretching
+      const doublePos = new vec2([2, 2]).multiply(this.pos);
+      const strechVector = vec2
+        .difference(this.prev.pos, doublePos)
+        .add(this.next.pos)
+        .multiply(0.8);
+
+      // Curvature 1
+
+      // Curvature 2
+      if (this.prev.prev && this.next.next) {
+        // fairingC = -(
+        //        0.25*OVerts[i-2].pos
+        //        -OVerts[i-1].pos
+        //        +(1.5)*OVerts[i].pos
+        //        -OVerts[i+1].pos
+        //        +0.25*OVerts[i+2].pos
+        //        );
+      }
+
+      // Sum all vectors
+      fairingVector.add(normalGrowthVector);
+      fairingVector.add(strechVector);
+    }
+    return fairingVector.multiply(P.GROW_RATE);
+  }
+
+  getVeinGrowthVector(): vec2 {
     const { prev } = this;
     const tipVertex = this.getTipVertex();
     const prevTipVertex = prev ? prev.getTipVertex() : tipVertex;
 
     if (tipVertex == prevTipVertex) {
       // Mid-segment, project on asocciated vein
-      return tipVertex.vein.getProjectedGrowthVector(this.position);
+      return tipVertex.vein.getProjectedGrowthVector(this.pos);
     } else {
       // If this is a boundary vertex, use growth from branching point between veins
       if (tipVertex.vein.parent == prevTipVertex.vein)
@@ -69,8 +114,7 @@ export default class MarginVertex {
   }
 
   length() {
-    if (this.next != null)
-      return vec2.distance(this.position, this.next.position);
+    if (this.next != null) return vec2.distance(this.pos, this.next.pos);
     return 0;
   }
 
@@ -84,9 +128,7 @@ export default class MarginVertex {
 
   // Duplicates this vertex and appends it midway to next
   subdivide() {
-    const newPosition = vec2
-      .sum(this.position, this.next.position)
-      .multiply(0.5);
+    const newPosition = vec2.average(this.pos, this.next.pos);
     const newVertex = this.copy(newPosition);
     newVertex.prev = this;
     this.next.prev = newVertex;
@@ -97,5 +139,23 @@ export default class MarginVertex {
 
   removeMorphogen(morphogen: Morphogen) {
     this.morphogens = this.morphogens.filter((m) => m != morphogen);
+  }
+
+  // TODO rotate direction based on side
+  calcNormal(clockwise: boolean) {
+    if (this.isTip) this.normal = this.vein.direction;
+    else {
+      this.normal = vec2
+        .difference(this.pos, this.next.pos)
+        .rotate90deg(clockwise)
+        .normalize();
+      if (this.prev) {
+        const prevSegmentNormal = vec2
+          .difference(this.prev.pos, this.pos)
+          .rotate90deg(clockwise)
+          .normalize();
+        this.normal = vec2.average(this.normal, prevSegmentNormal).normalize();
+      }
+    }
   }
 }

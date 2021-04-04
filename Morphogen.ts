@@ -8,7 +8,7 @@ export default class Morphogen {
   segments: Array<[MarginVertex, MarginVertex]> = [];
 
   // Parameters
-  growthMultiplier: number = 1;
+  growthMultiplier: vec2 = null;
   tipGenerationLength: number = -1; // Length of segment that will induce a new tip to form
 
   // =================

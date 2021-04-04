@@ -20,10 +20,10 @@ export default class LeafVein {
   constructor(origin: vec2, tipVertex: MarginVertex, parent: LeafVein = null) {
     this.id = LeafVein.counter++;
     this.origin = origin;
-    this.tip = tipVertex.position;
+    this.tip = tipVertex.pos;
     this.tipVertex = tipVertex;
     tipVertex.vein = this;
-    this.direction = vec2.direction(tipVertex.position, origin);
+    this.direction = vec2.direction(tipVertex.pos, origin);
     this.parent = parent;
   }
 
@@ -59,7 +59,8 @@ export default class LeafVein {
   // Get growth of margin point, as projected on to this vein
   getProjectedGrowthVector(marginPos: vec2) {
     const posVector = vec2.difference(marginPos, this.origin);
-    const projectedLength = vec2.dot(posVector, this.direction);
+    let projectedLength = vec2.dot(posVector, this.direction);
+    if (projectedLength > this.length()) projectedLength = 0;
     const growthAmount =
       utils.growthIntegralAtDist(this.distToBase + projectedLength) -
       utils.growthIntegralAtDist(this.distToBase);

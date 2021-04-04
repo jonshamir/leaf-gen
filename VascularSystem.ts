@@ -23,12 +23,12 @@ export class VascularSystem {
       const theta = Math.acos(P.V / P.B);
       const thetaComp = 0.5 * Math.PI - theta;
       const newVeinDir = new vec2([
-        -Math.sign(tipVertex.position.x),
+        -Math.sign(tipVertex.pos.x),
         -thetaComp,
       ]).normalize();
 
-      const p1 = tipVertex.position;
-      const p2 = vec2.sum(tipVertex.position, newVeinDir);
+      const p1 = tipVertex.pos;
+      const p2 = vec2.sum(tipVertex.pos, newVeinDir);
       const p3 = this.rootVein.origin;
       const p4 = vec2.sum(this.rootVein.origin, this.rootVein.direction);
 

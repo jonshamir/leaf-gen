@@ -1,5 +1,10 @@
 TODO
 =======
+
 - New veins - calculate attachment point
 - New tips - associate sample points based on distance parameter
-- Implement geometric fairing - margin growth
+- Implement geometric fairing - margin growth:
+  - Margin points - calculate normals
+  - calculate Streching
+  - calculate c1
+  - calculate c2
