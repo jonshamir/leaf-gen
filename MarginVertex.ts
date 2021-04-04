@@ -1,5 +1,6 @@
 import vec2 from "./utils/tsm/vec2";
-import * as P from "./utils/parameters";
+import P from "./utils/parameters";
+// import * as P from "./utils/parameters";
 import LeafVein from "./LeafVein";
 import Morphogen from "./Morphogen";
 
@@ -61,38 +62,36 @@ export default class MarginVertex {
     let fairingVector = new vec2([0, 0]);
     if (this.prev && !this.isTip) {
       // Normal
-      /// Growth in normal direction is proportional to average length of edges
-      let normalMultiplier = vec2.difference(this.next.pos, this.pos).length();
-      normalMultiplier += vec2.difference(this.pos, this.prev.pos).length();
-      normalMultiplier /= 2;
-      normalMultiplier *= 0.8;
+      // Growth in normal direction is proportional to average length of edges
+      let normalGrowthScaler = vec2
+        .difference(this.next.pos, this.pos)
+        .length();
+      normalGrowthScaler += vec2.difference(this.pos, this.prev.pos).length();
+      normalGrowthScaler /= 2;
 
-      const normalGrowthVector = this.normal.multiply(normalMultiplier);
+      const normalGrowthVector = this.normal.multiply(normalGrowthScaler);
+      fairingVector.add(normalGrowthVector.multiply(P.ALPHA_N));
 
       // Streching
       // Compute direction minimizing stretching
-      const doublePos = new vec2([2, 2]).multiply(this.pos);
+      const doublePos = vec2.product(this.pos, 2);
       const strechVector = vec2
         .difference(this.prev.pos, doublePos)
-        .add(this.next.pos)
-        .multiply(0.8);
+        .add(this.next.pos);
+      fairingVector.add(strechVector.multiply(P.ALPHA_S));
 
       // Curvature 1
 
       // Curvature 2
       if (this.prev.prev && this.next.next) {
-        // fairingC = -(
-        //        0.25*OVerts[i-2].pos
-        //        -OVerts[i-1].pos
-        //        +(1.5)*OVerts[i].pos
-        //        -OVerts[i+1].pos
-        //        +0.25*OVerts[i+2].pos
-        //        );
-      }
+        let Curvature2Vector = vec2.product(this.prev.prev.pos, -0.25);
+        Curvature2Vector.add(this.prev.pos);
+        Curvature2Vector.add(vec2.product(this.pos, -1.5));
+        Curvature2Vector.add(this.next.pos);
+        Curvature2Vector.add(vec2.product(this.next.next.pos, -0.25));
 
-      // Sum all vectors
-      fairingVector.add(normalGrowthVector);
-      fairingVector.add(strechVector);
+        fairingVector.add(Curvature2Vector.multiply(P.ALPHA_C2));
+      }
     }
     return fairingVector.multiply(P.GROW_RATE);
   }

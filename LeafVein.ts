@@ -1,5 +1,4 @@
 import vec2 from "./utils/tsm/vec2";
-import * as P from "./utils/parameters";
 import * as utils from "./utils/utils";
 import MarginVertex from "./MarginVertex";
 

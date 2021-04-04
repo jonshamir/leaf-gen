@@ -1,5 +1,5 @@
 import vec2 from "./tsm/vec2";
-import * as P from "./parameters";
+import P from "./parameters";
 
 // what is the growth amount at the point, as a function of the distance from the base
 export const growthIntegralAtDist = (distanceToBase: number) => {

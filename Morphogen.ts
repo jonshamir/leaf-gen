@@ -1,5 +1,4 @@
 import vec2 from "./utils/tsm/vec2";
-import * as P from "./utils/parameters";
 import MarginVertex from "./MarginVertex";
 
 export default class Morphogen {
