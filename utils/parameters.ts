@@ -11,8 +11,8 @@ export default {
 
   // Growth parameters
   GROW_RATE: 0.01,
-  GROWTH_DIST_FALLOFF: 7,
-  GROWTH_DIST_END: 8,
+  GROW_FALLOFF_DIST: 7,
+  GROW_END_DIST: 8,
 
   TIP_GENERATION_LENGTH: 5.5,
   NEW_TIP_SEGMENT_DELTA: 1.5,

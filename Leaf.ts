@@ -1,6 +1,4 @@
 import vec2 from "./utils/tsm/vec2";
-import P from "./utils/parameters";
-// import * as P from "./utils/parameters";
 import { VascularSystem } from "./VascularSystem";
 import { LeafLamina } from "./LeafLamina";
 import { LeafMargin } from "./LeafMargin";

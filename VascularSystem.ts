@@ -1,6 +1,5 @@
 import vec2 from "./utils/tsm/vec2";
-import P from "./utils/parameters";
-// import * as P from "./utils/parameters";
+// import P from "./utils/parameters";
 import * as utils from "./utils/utils";
 import LeafVein from "./LeafVein";
 import MarginVertex from "./MarginVertex";

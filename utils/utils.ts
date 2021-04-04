@@ -5,15 +5,15 @@ import P from "./parameters";
 export const growthIntegralAtDist = (distanceToBase: number) => {
   // Spatial integration of growth (closed form equation)
   let growth = distanceToBase;
-  if (distanceToBase > P.GROWTH_DIST_END)
-    growth = (P.GROWTH_DIST_FALLOFF + P.GROWTH_DIST_END) / 2;
-  else if (distanceToBase > P.GROWTH_DIST_FALLOFF)
+  if (distanceToBase > P.GROW_END_DIST)
+    growth = (P.GROW_FALLOFF_DIST + P.GROW_END_DIST) / 2;
+  else if (distanceToBase > P.GROW_FALLOFF_DIST)
     growth =
-      P.GROWTH_DIST_FALLOFF +
-      (distanceToBase - P.GROWTH_DIST_FALLOFF) *
+      P.GROW_FALLOFF_DIST +
+      (distanceToBase - P.GROW_FALLOFF_DIST) *
         (1 -
-          (0.5 * (distanceToBase - P.GROWTH_DIST_FALLOFF)) /
-            (P.GROWTH_DIST_END - P.GROWTH_DIST_FALLOFF));
+          (0.5 * (distanceToBase - P.GROW_FALLOFF_DIST)) /
+            (P.GROW_END_DIST - P.GROW_FALLOFF_DIST));
   return P.GROW_RATE * growth;
 };
 
